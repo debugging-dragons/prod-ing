@@ -30,5 +30,15 @@ pipeline {
             sh "git tag ${env.IMAGE_TAG}"
             sh "git push https://$GITHUB_TOKEN@github.com/${DOCKER_PASSWORD_USR}/service.git ${env.IMAGE_TAG}"
           }
+    stage('Deploy Application') {
+          steps {
+              sh "IMAGE_TAG=${env.IMAGE_TAG} docker compose up -d hello mongo"
+          }
+    }
+    stage('Integration Tests') {
+          steps {
+                  sh './gradlew testIT'
+              }
+          }
     }
 }
