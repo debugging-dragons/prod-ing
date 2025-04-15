@@ -6,7 +6,7 @@ pipeline {
         GITHUB_TOKEN = credentials("github_token")
     }
     tools {
-        jdk 'jdk21' // This name must match the JDK installation name used in Jenkins Global Tool Configuration
+        jdk 'jdk-21' // This name must match the JDK installation name used in Jenkins Global Tool Configuration
     }
 
 
