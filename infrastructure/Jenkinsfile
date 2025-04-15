@@ -1,8 +1,13 @@
 pipeline {
     agent any
+
     environment {
         DOCKER_PASSWORD = credentials("docker_password")
     }
+    tools {
+        jdk 'jdk21' // This name must match the JDK installation name used in Jenkins Global Tool Configuration
+    }
+
 
     stages {
         stage('Build & Test') {

@@ -24,6 +24,7 @@ services:
       - /usr/bin/docker:/usr/bin/docker
       - ./Dockerfile:/Dockerfile
       - /usr/libexec/docker/cli-plugins/docker-compose:/usr/libexec/docker/cli-plugins/docker-compose
+      - jenkins_home:/var/jenkins_home
     profiles:
       - "hello-service"
     user: 0:0
