@@ -33,10 +33,20 @@ pipeline {
               }
         }
 
+//         stage('Deploy Application') {
+//               steps {
+//                   sh "IMAGE_TAG=${env.IMAGE_TAG} docker compose up -d hello mongo"
+//               }
+//         }
+
         stage('Deploy Application') {
-              steps {
-                  sh "IMAGE_TAG=${env.IMAGE_TAG} docker compose up -d hello mongo"
-              }
+            steps {
+                sh "docker stop hello mongo || true"
+                sh "docker rm hello mongo || true"
+                sh "docker network create app-network || true"
+                sh "docker run -d --name mongo --network app-network -p 27017:27017 mongo:4.4.6"
+                sh "docker run -d --name hello --network app-network -p 8081:8080 hvdri/hello-img:${env.IMAGE_TAG}"
+            }
         }
 
         stage('Integration Tests') {
