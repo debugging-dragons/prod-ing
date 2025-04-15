@@ -9,7 +9,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import ro.unibuc.hello.dto.LoginRequest;
+import ro.unibuc.hello.dto.LoginResponse;
 import ro.unibuc.hello.dto.RegisterRequest;
 import ro.unibuc.hello.service.AuthenticationService;
 
@@ -18,14 +22,31 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Testcontainers
 @Tag("IntegrationTest")
 public class AuthenticationControllerIntegrationTest {
 
+    @Container
+    public static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:6.0.20")
+            .withExposedPorts(27017)
+            .withSharding();
+
+    @BeforeAll
+    public static void setUp() {
+        mongoDBContainer.start();
+    }
+
+    @AfterAll
+    public static void tearDown() {
+        mongoDBContainer.stop();
+    }
+
     @DynamicPropertySource
     static void setProperties(DynamicPropertyRegistry registry) {
-        // Use the existing MongoDB container running in Docker
-        registry.add("spring.data.mongodb.host", () -> "host.docker.internal");
-        registry.add("spring.data.mongodb.port", () -> 27017);
+        final String MONGO_URL = "mongodb://host.docker.internal:";
+        final String PORT = String.valueOf(mongoDBContainer.getMappedPort(27017));
+
+        registry.add("mongodb.connection.url", () -> MONGO_URL + PORT);
     }
 
     @Autowired
@@ -35,6 +56,7 @@ public class AuthenticationControllerIntegrationTest {
     private AuthenticationService authenticationService;
 
     private ObjectMapper objectMapper;
+
 
     @BeforeEach
     public void setUpBeforeEach() {
