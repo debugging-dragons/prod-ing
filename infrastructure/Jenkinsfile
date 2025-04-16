@@ -14,7 +14,7 @@ pipeline {
 
         stage('Build & Test') {
             steps {
-                sh './gradlew clean build'
+                sh './gradlew clean build -x testIT'
             }
         }
 
@@ -26,10 +26,10 @@ pipeline {
                    env.MINOR_VERSION = sh([script: 'git tag | sort --version-sort | tail -1 | cut -d . -f 2', returnStdout: true]).trim()
                    env.PATCH_VERSION = sh([script: 'git tag | sort --version-sort | tail -1 | cut -d . -f 3', returnStdout: true]).trim()
                    env.IMAGE_TAG = "${env.MAJOR_VERSION}.\$((${env.MINOR_VERSION} + 1)).${env.PATCH_VERSION}"
+                    sh "docker build -t hvdri/hello-img:${MAJOR_VERSION}.\$((${MINOR_VERSION} + 1)).${PATCH_VERSION} ."
+                    sh "git tag ${env.IMAGE_TAG}"
+                    sh "git push https://$GITHUB_TOKEN@github.com/debugging-dragons/prod-ing.git ${env.IMAGE_TAG}"
                 }
-                sh "docker build -t hvdri/hello-img:${MAJOR_VERSION}.\$((${MINOR_VERSION} + 1)).${PATCH_VERSION} ."
-                sh "git tag ${env.IMAGE_TAG}"
-                sh "git push https://$GITHUB_TOKEN@github.com/debugging-dragons/prod-ing.git ${env.IMAGE_TAG}"
               }
         }
 
@@ -41,18 +41,20 @@ pipeline {
 
         stage('Deploy Application') {
             steps {
+                script {
                 sh "docker stop hello mongo || true"
                 sh "docker rm hello mongo || true"
                 sh "docker network create app-network || true"
                 sh "docker run -d --name mongo --network app-network -p 27017:27017 mongo:4.4.6"
                 sh "docker run -d --name hello --network app-network -p 8081:8080 hvdri/hello-img:${env.IMAGE_TAG}"
-            }
+            }}
         }
 
         stage('Integration Tests') {
               steps {
+                script {
                       sh './gradlew testIT'
-              }
+              }}
         }
     }
 }
