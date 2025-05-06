@@ -27,16 +27,16 @@ class GameServiceTest {
 
     @Mock
     private GameRepository gameRepository;
-    
+
     @Mock
     private MeterRegistry metricsRegistry;
-    
+
     @InjectMocks
     private GameService gameService;
 
     private Game testGame;
     private static final String GAME_ID = "game123";
-    
+
     @BeforeEach
     void setUp() {
         // Create test game
@@ -49,18 +49,17 @@ class GameServiceTest {
         // Arrange
         List<Game> games = Arrays.asList(
                 testGame,
-                new Game("Another Game", "PlayStation", "RPG", 2022)
-        );
-        
+                new Game("Another Game", "PlayStation", "RPG", 2022));
+
         // Setup counter mock
         Counter counterMock = mock(Counter.class);
         when(metricsRegistry.counter("game_service_calls", "method", "getAllGames")).thenReturn(counterMock);
         doNothing().when(counterMock).increment();
-        
+
         // Setup timer mock
         Timer timerMock = mock(Timer.class);
         when(metricsRegistry.timer("game_service_time", "method", "getAllGames")).thenReturn(timerMock);
-        
+
         // Setup repository mock
         when(gameRepository.findAll()).thenReturn(games);
 
@@ -74,7 +73,7 @@ class GameServiceTest {
 
         // Verify repository mock was called
         verify(gameRepository, times(1)).findAll();
-        
+
         // Verify metrics were recorded
         verify(counterMock, times(1)).increment();
         verify(timerMock, times(1)).record(anyLong(), eq(TimeUnit.NANOSECONDS));
@@ -84,12 +83,12 @@ class GameServiceTest {
     void testGetGameById_ExistingGame() {
         // Arrange - setup the mocks
         when(gameRepository.findById(GAME_ID)).thenReturn(Optional.of(testGame));
-        
+
         // Setup counter mock
         Counter counterMock = mock(Counter.class);
         when(metricsRegistry.counter("game_service_calls", "method", "getGameById")).thenReturn(counterMock);
         doNothing().when(counterMock).increment();
-        
+
         // Setup timer mock
         Timer timerMock = mock(Timer.class);
         when(metricsRegistry.timer("game_service_time", "method", "getGameById")).thenReturn(timerMock);
@@ -107,7 +106,7 @@ class GameServiceTest {
 
         // Verify the repository mock was called
         verify(gameRepository, times(1)).findById(GAME_ID);
-        
+
         // Verify metrics were recorded
         verify(counterMock, times(1)).increment();
         verify(timerMock, times(1)).record(anyLong(), eq(TimeUnit.NANOSECONDS));
@@ -117,16 +116,17 @@ class GameServiceTest {
     void testGetGameById_NonExistingGame() {
         // Arrange
         String nonExistingId = "nonExistingId";
-        
+
         // Setup repository mock
         when(gameRepository.findById(nonExistingId)).thenReturn(Optional.empty());
-        
+
         // Setup counter mock
         Counter counterMock = mock(Counter.class);
         when(metricsRegistry.counter("game_service_calls", "method", "getGameById")).thenReturn(counterMock);
         doNothing().when(counterMock).increment();
-        
-        // Note: We're NOT setting up the timer mock since it won't be used due to exception
+
+        // Note: We're NOT setting up the timer mock since it won't be used due to
+        // exception
 
         // Act & Assert
         Exception exception = assertThrows(EntityNotFoundException.class, () -> {
@@ -141,7 +141,7 @@ class GameServiceTest {
 
         // Verify counter metric was recorded (timer won't complete due to exception)
         verify(counterMock, times(1)).increment();
-}
+    }
 
     @Test
     void testCreateGame() {
@@ -149,15 +149,15 @@ class GameServiceTest {
         Game newGame = new Game("New Game", "Xbox", "Strategy", 2024);
         Game savedGame = new Game("New Game", "Xbox", "Strategy", 2024);
         savedGame.setId("newGameId");
-        
+
         // Setup repository mock
         when(gameRepository.save(any(Game.class))).thenReturn(savedGame);
-        
+
         // Setup counter mock
         Counter counterMock = mock(Counter.class);
         when(metricsRegistry.counter("game_service_calls", "method", "createGame")).thenReturn(counterMock);
         doNothing().when(counterMock).increment();
-        
+
         // Setup timer mock
         Timer timerMock = mock(Timer.class);
         when(metricsRegistry.timer("game_service_time", "method", "createGame")).thenReturn(timerMock);
@@ -175,7 +175,7 @@ class GameServiceTest {
 
         // Verify the repository mock was called
         verify(gameRepository, times(1)).save(any(Game.class));
-        
+
         // Verify metrics were recorded
         verify(counterMock, times(1)).increment();
         verify(timerMock, times(1)).record(anyLong(), eq(TimeUnit.NANOSECONDS));
@@ -185,19 +185,19 @@ class GameServiceTest {
     void testUpdateGame_ExistingGame() {
         // Arrange
         Game updatedGame = new Game("Updated Game", "Switch", "Adventure", 2021);
-        
+
         // Setup repository mocks
         when(gameRepository.findById(GAME_ID)).thenReturn(Optional.of(testGame));
         when(gameRepository.save(any(Game.class))).thenAnswer(invocation -> {
             Game savedGame = invocation.getArgument(0);
             return savedGame; // Return the game being saved
         });
-        
+
         // Setup counter mock
         Counter counterMock = mock(Counter.class);
         when(metricsRegistry.counter("game_service_calls", "method", "updateGame")).thenReturn(counterMock);
         doNothing().when(counterMock).increment();
-        
+
         // Setup timer mock
         Timer timerMock = mock(Timer.class);
         when(metricsRegistry.timer("game_service_time", "method", "updateGame")).thenReturn(timerMock);
@@ -216,44 +216,44 @@ class GameServiceTest {
         // Verify the repository mocks were called
         verify(gameRepository, times(1)).findById(GAME_ID);
         verify(gameRepository, times(1)).save(any(Game.class));
-        
+
         // Verify metrics were recorded
         verify(counterMock, times(1)).increment();
         verify(timerMock, times(1)).record(anyLong(), eq(TimeUnit.NANOSECONDS));
     }
 
-    @@Test
-void testUpdateGame_NonExistingGame() {
-    // Arrange
-    String nonExistingId = "nonExistingId";
-    Game updatedGame = new Game("Updated Game", "Switch", "Adventure", 2021);
-    
-    // Setup repository mock
-    when(gameRepository.findById(nonExistingId)).thenReturn(Optional.empty());
-    
-    // Setup counter mock
-    Counter counterMock = mock(Counter.class);
-    when(metricsRegistry.counter("game_service_calls", "method", "updateGame")).thenReturn(counterMock);
-    doNothing().when(counterMock).increment();
-    
-    // Note: We're NOT setting up the timer mock since it won't be used due to exception
+    @Test
+    void testUpdateGame_NonExistingGame() {
+        // Arrange
+        String nonExistingId = "nonExistingId";
+        Game updatedGame = new Game("Updated Game", "Switch", "Adventure", 2021);
 
-    // Act & Assert
-    Exception exception = assertThrows(EntityNotFoundException.class, () -> {
-        gameService.updateGame(nonExistingId, updatedGame);
-    });
+        // Setup repository mock
+        when(gameRepository.findById(nonExistingId)).thenReturn(Optional.empty());
 
-    // Verify exception message if needed
-    assertTrue(exception.getMessage().contains(nonExistingId));
+        // Setup counter mock
+        Counter counterMock = mock(Counter.class);
+        when(metricsRegistry.counter("game_service_calls", "method", "updateGame")).thenReturn(counterMock);
+        doNothing().when(counterMock).increment();
 
-    // Verify the repository mocks were called
-    verify(gameRepository, times(1)).findById(nonExistingId);
-    verify(gameRepository, never()).save(any(Game.class));
-    
-    // Verify counter metric was recorded
-    verify(counterMock, times(1)).increment();
-}
+        // Note: We're NOT setting up the timer mock since it won't be used due to
+        // exception
 
+        // Act & Assert
+        Exception exception = assertThrows(EntityNotFoundException.class, () -> {
+            gameService.updateGame(nonExistingId, updatedGame);
+        });
+
+        // Verify exception message if needed
+        assertTrue(exception.getMessage().contains(nonExistingId));
+
+        // Verify the repository mocks were called
+        verify(gameRepository, times(1)).findById(nonExistingId);
+        verify(gameRepository, never()).save(any(Game.class));
+
+        // Verify counter metric was recorded
+        verify(counterMock, times(1)).increment();
+    }
 
     @Test
     void testDeleteGame_ExistingGame() {
@@ -261,12 +261,12 @@ void testUpdateGame_NonExistingGame() {
         // Setup repository mocks
         when(gameRepository.findById(GAME_ID)).thenReturn(Optional.of(testGame));
         doNothing().when(gameRepository).delete(any(Game.class));
-        
+
         // Setup counter mock
         Counter counterMock = mock(Counter.class);
         when(metricsRegistry.counter("game_service_calls", "method", "deleteGame")).thenReturn(counterMock);
         doNothing().when(counterMock).increment();
-        
+
         // Setup timer mock
         Timer timerMock = mock(Timer.class);
         when(metricsRegistry.timer("game_service_time", "method", "deleteGame")).thenReturn(timerMock);
@@ -278,53 +278,54 @@ void testUpdateGame_NonExistingGame() {
         // Verify the repository mocks were called
         verify(gameRepository, times(1)).findById(GAME_ID);
         verify(gameRepository, times(1)).delete(testGame);
-        
+
         // Verify metrics were recorded
         verify(counterMock, times(1)).increment();
         verify(timerMock, times(1)).record(anyLong(), eq(TimeUnit.NANOSECONDS));
     }
 
     @Test
-void testDeleteGame_NonExistingGame() {
-    // Arrange
-    String nonExistingId = "nonExistingId";
-    
-    // Setup repository mock
-    when(gameRepository.findById(nonExistingId)).thenReturn(Optional.empty());
-    
-    // Setup counter mock
-    Counter counterMock = mock(Counter.class);
-    when(metricsRegistry.counter("game_service_calls", "method", "deleteGame")).thenReturn(counterMock);
-    doNothing().when(counterMock).increment();
-    
-    // Note: We're NOT setting up the timer mock since it won't be used due to exception
+    void testDeleteGame_NonExistingGame() {
+        // Arrange
+        String nonExistingId = "nonExistingId";
 
-    // Act & Assert
-    Exception exception = assertThrows(EntityNotFoundException.class, () -> {
-        gameService.deleteGame(nonExistingId);
-    });
+        // Setup repository mock
+        when(gameRepository.findById(nonExistingId)).thenReturn(Optional.empty());
 
-    // Verify exception message if needed
-    assertTrue(exception.getMessage().contains(nonExistingId));
+        // Setup counter mock
+        Counter counterMock = mock(Counter.class);
+        when(metricsRegistry.counter("game_service_calls", "method", "deleteGame")).thenReturn(counterMock);
+        doNothing().when(counterMock).increment();
 
-    // Verify the repository mocks were called
-    verify(gameRepository, times(1)).findById(nonExistingId);
-    verify(gameRepository, never()).delete(any(Game.class));
-    
-    // Verify counter metric was recorded
-    verify(counterMock, times(1)).increment();
-}
-    
+        // Note: We're NOT setting up the timer mock since it won't be used due to
+        // exception
+
+        // Act & Assert
+        Exception exception = assertThrows(EntityNotFoundException.class, () -> {
+            gameService.deleteGame(nonExistingId);
+        });
+
+        // Verify exception message if needed
+        assertTrue(exception.getMessage().contains(nonExistingId));
+
+        // Verify the repository mocks were called
+        verify(gameRepository, times(1)).findById(nonExistingId);
+        verify(gameRepository, never()).delete(any(Game.class));
+
+        // Verify counter metric was recorded
+        verify(counterMock, times(1)).increment();
+    }
+
     @Test
     void testDeleteAllGames() {
         // Arrange
         doNothing().when(gameRepository).deleteAll();
-        
+
         // Setup counter mock
         Counter counterMock = mock(Counter.class);
         when(metricsRegistry.counter("game_service_calls", "method", "deleteAllGames")).thenReturn(counterMock);
         doNothing().when(counterMock).increment();
-        
+
         // Setup timer mock
         Timer timerMock = mock(Timer.class);
         when(metricsRegistry.timer("game_service_time", "method", "deleteAllGames")).thenReturn(timerMock);
@@ -335,7 +336,7 @@ void testDeleteGame_NonExistingGame() {
         // Assert
         // Verify the repository mock was called
         verify(gameRepository, times(1)).deleteAll();
-        
+
         // Verify metrics were recorded
         verify(counterMock, times(1)).increment();
         verify(timerMock, times(1)).record(anyLong(), eq(TimeUnit.NANOSECONDS));
