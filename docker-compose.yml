@@ -1,6 +1,6 @@
 services:
   hello:
-    image: hvdri/hello-img:${IMAGE_TAG}
+    image: hvdri/hello-img:${IMAGE_TAG:-latest}
     ports:
       - 8080:8080
       # Port for debug
