@@ -11,9 +11,8 @@ route:
 receivers:
 - name: 'email'
   email_configs:
-  - to: 'EMAIL@gmail.com'
-    from: 'EMAIL@gmail.com'
-    smarthost: smtp.gmail.com:587
-    auth_username: 'EMAIL@gmail.com'
-    auth_identity: 'EMAIL@gmail.com'
-    auth_password: 'GENERATE ONE FROM https://security.google.com/settings/security/apppasswords'
+  - to: 'to@example.com'
+    from: 'from@example.com'
+    smarthost: sandbox.smtp.mailtrap.io:587
+    auth_username: 'd93a309c3894f2'
+    auth_password: 'b3902d0c458c9d'

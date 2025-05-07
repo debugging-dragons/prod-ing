@@ -50,14 +50,18 @@ public class GameService {
 
     public Game createGame(Game game) {
         metricsRegistry.counter("game_service_calls", "method", "createGame").increment();
-        
+    
         long startTime = System.nanoTime();
-        Game savedGame = gameRepository.save(game);
-        long duration = System.nanoTime() - startTime;
-        
-        metricsRegistry.timer("game_service_time", "method", "createGame").record(duration, java.util.concurrent.TimeUnit.NANOSECONDS);
-        
-        return savedGame;
+        try {
+            Game savedGame = gameRepository.save(game);
+            long duration = System.nanoTime() - startTime;
+            metricsRegistry.timer("game_service_time", "method", "createGame").record(duration, java.util.concurrent.TimeUnit.NANOSECONDS);
+            return savedGame;
+        } catch (Exception e) {
+            // Record the error
+            metricsRegistry.counter("game_service_errors", "method", "createGame", "exception", e.getClass().getSimpleName()).increment();
+            throw e;
+        }
     }
 
     public Game updateGame(String id, Game gameDetails) {

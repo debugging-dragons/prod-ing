@@ -222,37 +222,37 @@ class GameServiceTest {
         verify(timerMock, times(1)).record(anyLong(), eq(TimeUnit.NANOSECONDS));
     }
 
-    @@Test
-void testUpdateGame_NonExistingGame() {
-    // Arrange
-    String nonExistingId = "nonExistingId";
-    Game updatedGame = new Game("Updated Game", "Switch", "Adventure", 2021);
-    
-    // Setup repository mock
-    when(gameRepository.findById(nonExistingId)).thenReturn(Optional.empty());
-    
-    // Setup counter mock
-    Counter counterMock = mock(Counter.class);
-    when(metricsRegistry.counter("game_service_calls", "method", "updateGame")).thenReturn(counterMock);
-    doNothing().when(counterMock).increment();
-    
-    // Note: We're NOT setting up the timer mock since it won't be used due to exception
+    @Test
+    void testUpdateGame_NonExistingGame() {
+        // Arrange
+        String nonExistingId = "nonExistingId";
+        Game updatedGame = new Game("Updated Game", "Switch", "Adventure", 2021);
+        
+        // Setup repository mock
+        when(gameRepository.findById(nonExistingId)).thenReturn(Optional.empty());
+        
+        // Setup counter mock
+        Counter counterMock = mock(Counter.class);
+        when(metricsRegistry.counter("game_service_calls", "method", "updateGame")).thenReturn(counterMock);
+        doNothing().when(counterMock).increment();
+        
+        // Note: We're NOT setting up the timer mock since it won't be used due to exception
 
-    // Act & Assert
-    Exception exception = assertThrows(EntityNotFoundException.class, () -> {
-        gameService.updateGame(nonExistingId, updatedGame);
-    });
+        // Act & Assert
+        Exception exception = assertThrows(EntityNotFoundException.class, () -> {
+            gameService.updateGame(nonExistingId, updatedGame);
+        });
 
-    // Verify exception message if needed
-    assertTrue(exception.getMessage().contains(nonExistingId));
+        // Verify exception message if needed
+        assertTrue(exception.getMessage().contains(nonExistingId));
 
-    // Verify the repository mocks were called
-    verify(gameRepository, times(1)).findById(nonExistingId);
-    verify(gameRepository, never()).save(any(Game.class));
-    
-    // Verify counter metric was recorded
-    verify(counterMock, times(1)).increment();
-}
+        // Verify the repository mocks were called
+        verify(gameRepository, times(1)).findById(nonExistingId);
+        verify(gameRepository, never()).save(any(Game.class));
+        
+        // Verify counter metric was recorded
+        verify(counterMock, times(1)).increment();
+    }
 
 
     @Test

@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import jakarta.validation.Valid;
 
@@ -22,6 +23,42 @@ public class GameController {
     @Autowired
     public GameController(GameService gameService) {
         this.gameService = gameService;
+    }
+
+    @GetMapping("/slow")
+    public ResponseEntity<List<Game>> getAllGamesSlow() throws InterruptedException {
+        Thread.sleep(12000);
+        List<Game> games = gameService.getAllGames();
+        return new ResponseEntity<>(games, HttpStatus.OK);
+    }
+
+    @GetMapping("/create-game-error")
+    public ResponseEntity<String> triggerCreateGameError() {
+        try {
+            // Create a game with invalid data to trigger an error
+            Game invalidGame = new Game("", "", "", -1);
+            gameService.createGame(invalidGame);
+            return new ResponseEntity<>("This should not happen", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error triggered: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/memory")
+    public String consumeMemory() {
+        List<byte[]> memoryConsumer = new ArrayList<>();
+        
+        // Create and add 10 arrays of 10MB each
+        for (int i = 0; i < 10; i++) {
+            memoryConsumer.add(new byte[10 * 1024 * 1024]); // 10MB per array
+            try {
+                Thread.sleep(500); // Sleep to allow monitoring to catch up
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        
+        return "Memory consumption test completed";
     }
 
     @GetMapping
