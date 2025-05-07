@@ -1,7 +1,6 @@
 services:
   hello:
-    image: hello-img
-    build: .
+    image: yoyo1912/hello-img:${IMAGE_TAG:-latest}
     ports:
       - 8080:8080
       # Port for debug
@@ -19,14 +18,16 @@ services:
       - 50000:50000
     restart: on-failure
     volumes:
-      - /workspaces/jenkins_config:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
       - /usr/bin/docker:/usr/bin/docker
       - ./Dockerfile:/Dockerfile
       - /usr/libexec/docker/cli-plugins/docker-compose:/usr/libexec/docker/cli-plugins/docker-compose
+      - jenkins_home:/var/jenkins_home
     profiles:
       - "hello-service"
     user: 0:0
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
   mongo:
     image: mongo:6.0.20
     restart: always
@@ -142,3 +143,6 @@ services:
       driver: loki
       options:
         loki-url: "http://loki:3100/loki/api/v1/push"
+
+volumes:
+  jenkins_home:
