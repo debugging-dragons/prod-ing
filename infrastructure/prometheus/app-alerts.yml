@@ -18,3 +18,39 @@ groups:
         annotations:
           summary: Increased info retrieval rate {{ $labels.value}} {{ $value }}
           description: "A container has disappeared\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+      - alert: SlowGamesList
+        expr: rate(game_service_time_seconds_sum{method="getAllGames"}[1m]) / rate(game_service_time_seconds_count{method="getAllGames"}[1m]) > 0.001
+        for: 10s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow response from getAllGames"
+          description: "The getAllGames method is responding slowly (>0.001s) for the last 2 minutes"
+
+      - alert: GameCreationErrors
+        expr: rate(game_service_errors{method="createGame"}[1m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Game creation failures detected"
+          description: "There have been errors when creating games in the last 5 minutes"
+
+      - alert: MissingImportantMetric
+        expr: absent(game_service_calls{method="createGame"})
+        for: 10s
+        labels:
+          severity: critical
+        annotations:
+          summary: "High rate of game creation detected"
+          description: "Games are being created at a rate of more than 2 per minute for the last 10 seconds"
+
+      - alert: HighJvmMemoryUsage
+        expr: (sum(jvm_memory_used_bytes{area="heap"}) / sum(jvm_memory_max_bytes{area="heap"})) * 100 > 0.1
+        for: 10s
+        labels:
+          severity: warning
+        annotations:
+          summary: "High JVM memory usage"
+          description: "JVM memory usage has been above 80% for 5 minutes"
